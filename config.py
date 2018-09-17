@@ -8,6 +8,14 @@ class Config(object):
     SQLALCHEMY_COMMIT_ON_TERMDOWN = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
+    # 电子邮件配置
+    MAIL_SERVER = 'smtp.163.com'
+    MAIL_PORT = 465
+    # MAIL_USE_TLS = False
+    MAIL_USE_SSL = True
+    MAIL_USERNAME = os.getenv('MAIL_USERNAME')
+    MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
+
     @staticmethod
     def init_app(app):
         pass
@@ -16,16 +24,17 @@ class Config(object):
 class DevelopmentConfig(Config):
     """开发环境配置项"""
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_MYSQL_DATABASE_URL') + 'flask_dev_data' or 'sqlite:////' + os.path.join(basedir, 'data-dev.sqlite')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_MYSQL_DEV_DATABASE_URL') or 'sqlite:////' + os.path.join(basedir, 'data-dev.sqlite')
 
 
 class TestingConfig(Config):
+    TESTING = True
     """测试环境配置项"""
-    SQLALCHEMY_DATABASW_URI = os.environ.get('SQLALCHEMY_MYSQL_DATABASE_URL') + 'flask_test_data' or 'sqlite:////' + os.path.join(basedir, 'data-test.sqlite')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_MYSQL_TEST_DATABASE_URL') or 'sqlite:////' + os.path.join(basedir, 'data-test.sqlite')
 
 
 class ProductConfig(Config):
-    SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_MYSQL_DATABASE_URL') + 'flask_product_data' or 'sqlite:////' + os.path.join(basedir, 'data-product.sqlite')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_MYSQL_PRODUCT_DATABASE_URL') or 'sqlite:////' + os.path.join(basedir, 'data-product.sqlite')
 
 
 config = {

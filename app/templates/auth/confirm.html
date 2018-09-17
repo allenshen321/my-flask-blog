@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %} Flasky - confirm email {% endblock %}
+
+{% block page_content %}
+<div class="header">
+    <h1>Please confirm!</h1>
+</div>
+<div class="test-body">
+    <p>hello, {{ user.username }},</p>
+    <p>please click the link below for confirmation.</p>
+    <a href="{{ url_for('auth.confirm', token=token, _external=True) }}">{{ url_for('auth.confirm', token=token, _external=True) }}</a>
+</div>
+
+{% endblock %}

@@ -4,6 +4,7 @@ from .forms import LoginForm, RegistrationForm, ChangePassword
 from . import auth
 from ..models import User
 from .. import db
+from ..email import send_email
 
 
 @auth.route('/login', methods=['GET', 'POST'])
@@ -36,9 +37,51 @@ def register():
                     )
         db.session.add(user)
         db.session.commit()
-        flash('you can now login.')
-        return redirect(url_for('.login'))
+        token = user.generate_confirmation_token()
+        send_email(user.email, '确认邮件', 'auth/confirm', token=token, user=user)
+        flash('确认邮件已经发送到您的邮箱,请及时确认!')
+        return redirect(url_for('auth.login'))
     return render_template('auth/register.html', form=form)
+
+
+@auth.route('/confirm/<token>')
+@login_required
+def confirm(token):
+    if current_user.confirmed:
+        flash('你之前已经确认过了,可以正常访问!')
+        return redirect(url_for('main.index'))
+    if current_user.confirm(token):
+        flash('您已经完成确认,谢谢!')
+    else:
+        flash('确认网址无效或者已过期!')
+    return redirect(url_for('main.index'))
+
+
+@auth.before_request
+def before_request():
+    """请求前的钩子"""
+    if current_user.is_authenticated \
+            and not current_user.confirmed \
+            and request.endpoint[:5] != 'auth.' \
+            and request.endpoint != 'static':
+        return redirect(url_for('auth.unconfirmed'))
+
+
+@auth.route('/unconfirmed')
+def unconfirmed():
+    """未确认用户视图"""
+    if current_user.is_anonymous and current_user.confirmed:
+        redirect(url_for('main.index'))
+    return render_template('auth/unconfirmed.html')
+
+
+@auth.route('/confirm')
+@login_required
+def resend_confirmation():
+    token = current_user.generate_confirmation_token()
+    send_email(current_user.email, '确认邮件', 'auth/confirm', token=token, user=current_user)
+    flash('一份新的确认邮件已发至您的邮箱,请及时进行账户确认!')
+    return render_template(url_for('main.index'))
 
 
 @auth.route('/changepassword', methods=['GET', 'POST'])

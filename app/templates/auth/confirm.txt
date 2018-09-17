@@ -1,0 +1,8 @@
+Hello, {{ user.username }}:
+    Here is a confirm email. Before you can access to future web site, you must confirm your email. Now click on the URL below for confirmation.
+    {{ url_for('auth.confirm', token=token, _external=True) }}
+
+Sincerely,
+Flasky Team
+
+

@@ -3,6 +3,7 @@ from . import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask.ext.login import UserMixin, AnonymousUserMixin
 from . import login_manager
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
 
 @login_manager.user_loader
@@ -17,6 +18,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(64), unique=True, index=True)
     username = db.Column(db.String(64), unique=True, index=True)
     password_hash = db.Column(db.String(128))
+    confirmed = db.Column(db.Boolean, default=False)  # 用户是否邮件确认
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
 
     def __init__(self, *args, **kwargs):
@@ -49,6 +51,25 @@ class User(UserMixin, db.Model):
     def is_administrator(self):
         """验证是否是管理员"""
         return self.can(Permission.ADMINISTER)
+
+    def generate_confirmation_token(self, expiration=3600):
+        """生成确认token"""
+        s = Serializer(current_app.config['SECRET_KEY'], expires_in=expiration)
+        return s.dumps({'confirm': self.id})
+
+    def confirm(self, token):
+        """验证确认token"""
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            data = s.loads(token)
+        except:
+            return False
+        if data.get('confirm') != self.id:
+            return False
+        self.confirmed = True
+        db.session.add(self)
+        db.session.commit()
+        return True
 
     def __repr__(self):
         return '<User %s>' % self.username
