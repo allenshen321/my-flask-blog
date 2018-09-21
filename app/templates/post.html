@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% import 'bootstrap/wtf.html' as wtf %}
+{% import '_macros.html' as macro %}
+
+{% block page_content %}
+    <div class="post">
+        <div class="post-header">
+            {% for post in posts %}
+            <li>
+                <h3><a href="{{ url_for('main.post', id=post.id) }}">{{ post.title }}</a></h3>
+                <a href="{{ url_for('main.user', username=post.author.username) }}">作者:{{ post.author.username }}</a>
+                <span>发表时间: {{ moment(post.timestamp).fromNow(refresh=True) }}</span>
+    {#            如果当前用户是文章作者,则显示编辑文章#}
+                {% if current_user == post.author %}
+                <a href="{{ url_for('main.edit_post', id=post.id) }}">
+                    <span class="label label-primary">编辑文章</span>
+                </a>
+                {% elif current_user.is_administrator() %}
+                    <a href="{{ url_for('main.edit_post', id=post.id) }}">
+                        <span class="label label-danger">编辑文章</span>
+                    </a>
+                {% endif %}
+            </li>
+        {% endfor %}
+
+        </div>
+        <hr>
+        <div class="post-body">
+        {% for post in posts %}
+            {% if post.body_html %}
+                {{ post.body_html }}
+            {% else %}
+                {{ post.body }}
+            {% endif %}
+        {% endfor %}
+        </div>
+
+        <div class="post-comment">
+            <div class="comment-header">
+                <hr>
+                <h4 id="comments">评论列表</h4>
+                <hr>
+            </div>
+            <div class="form">
+                {{ wtf.quick_form(form) }}
+            </div>
+            <hr>
+            {% include '_comments.html' %}
+            <hr>
+            <div class="comment-nav">
+                {{ macro.follow_pagination_widget(pagination, 'main.post', id=id) }}
+            </div>
+
+        </div>
+    </div>
+{% endblock %}

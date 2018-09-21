@@ -16,6 +16,11 @@ class Config(object):
     MAIL_USERNAME = os.getenv('MAIL_USERNAME')
     MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
 
+    # 每页显示数量控制
+    FLASK_POSTS_PER_PAGE_COUNT = 20
+    FLASK_FOLLOW_PER_PAGE_COUNT = 20
+    FLASK_COMMENT_PER_PAGE_COUNT = 5
+
     @staticmethod
     def init_app(app):
         pass

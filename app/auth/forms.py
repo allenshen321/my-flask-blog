@@ -17,6 +17,7 @@ class RegistrationForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(1, 64), Regexp(r'^[A-Za-z][A-Za-z0-9_.]*$', 0, 'Username must be letter, numbers, dot or underscores')])
     password = PasswordField('Password', validators=[DataRequired(), EqualTo('password2', message='password must match')])
     password2 = PasswordField('Password again', validators=[DataRequired()])
+
     submit = SubmitField('Register')
 
     def validate_email(self, field):

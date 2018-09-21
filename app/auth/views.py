@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, flash, request
+from flask import render_template, redirect, url_for, flash, request, abort
 from flask.ext.login import login_user, logout_user, login_required, current_user
 from .forms import LoginForm, RegistrationForm, ChangePassword
 from . import auth
@@ -7,8 +7,20 @@ from .. import db
 from ..email import send_email
 
 
+@auth.before_request
+def before_request():
+    """请求前的钩子"""
+    if current_user.is_authenticated:
+        current_user.ping()
+        if not current_user.confirmed \
+                and request.endpoint[:5] != 'auth.' \
+                and request.endpoint != 'static':
+            return redirect(url_for('auth.unconfirmed'))
+
+
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
+    """登录视图"""
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
@@ -22,6 +34,7 @@ def login():
 @auth.route('/logout')
 @login_required
 def logout():
+    """退出登录视图"""
     logout_user()
     flash('you have been logged out')
     return redirect(url_for('main.index'))
@@ -29,11 +42,12 @@ def logout():
 
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
+    """注册视图"""
     form = RegistrationForm()
     if form.validate_on_submit():
         user = User(email=form.email.data,
                     username=form.username.data,
-                    password=form.password.data
+                    password=form.password.data,
                     )
         db.session.add(user)
         db.session.commit()
@@ -47,6 +61,7 @@ def register():
 @auth.route('/confirm/<token>')
 @login_required
 def confirm(token):
+    """确认邮件发送视图"""
     if current_user.confirmed:
         flash('你之前已经确认过了,可以正常访问!')
         return redirect(url_for('main.index'))
@@ -55,16 +70,6 @@ def confirm(token):
     else:
         flash('确认网址无效或者已过期!')
     return redirect(url_for('main.index'))
-
-
-@auth.before_request
-def before_request():
-    """请求前的钩子"""
-    if current_user.is_authenticated \
-            and not current_user.confirmed \
-            and request.endpoint[:5] != 'auth.' \
-            and request.endpoint != 'static':
-        return redirect(url_for('auth.unconfirmed'))
 
 
 @auth.route('/unconfirmed')
@@ -78,6 +83,7 @@ def unconfirmed():
 @auth.route('/confirm')
 @login_required
 def resend_confirmation():
+    """重新发送确认邮件视图"""
     token = current_user.generate_confirmation_token()
     send_email(current_user.email, '确认邮件', 'auth/confirm', token=token, user=current_user)
     flash('一份新的确认邮件已发至您的邮箱,请及时进行账户确认!')
@@ -87,6 +93,7 @@ def resend_confirmation():
 @auth.route('/changepassword', methods=['GET', 'POST'])
 @login_required
 def change_password():
+    """修改密码视图"""
     form = ChangePassword()
     if form.validate_on_submit():
         if current_user.verify_password(form.old_password.data):
@@ -98,3 +105,7 @@ def change_password():
         else:
             flash('Invalid password')
     return render_template('auth/change-password.html', form=form)
+
+
+
+

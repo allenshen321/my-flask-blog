@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
-
 {#引用bootstrap默认表单样式#}
 {% import 'bootstrap/wtf.html' as wtf %}
+{#引用分页导航宏#}
+{% import '_macros.html' as macro %}
+
 
 {% block page_content %}
     <div class="page-header">
-        <!--<h1>Hello, {% if name %}{{ name }}{% else %}Stranger{% endif %}</h1>-->
         <h1>hello,
         {% if current_user.is_authenticated %}
             {{ current_user.username }}
@@ -13,6 +14,16 @@
             Stranger
         {% endif %}
         </h1>
+    </div>
+    <div class="blogs">
+        <div class="write-article">
+            {{ wtf.quick_form(form) }}
+        </div>
+        <h3>最新文章:</h3>
+        {% include '_posts.html' %}
+        <div class="pagination">
+            {{ macro.pagination_widget(pagination, 'main.index') }}
+        </div>
     </div>
 
 {#    设置本地时间#}

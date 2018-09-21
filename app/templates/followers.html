@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% import '_macros.html' as macro %}
+
+{% block title %}Flasky-{{ title }} user.username {% endblock %}
+
+{% block page_content %}
+    <div class="page-header">
+        <h1>{{ user.username }}关注的人</h1>
+    </div>
+    <div class="follow">
+        {% include '_follow.html' %}
+    </div>
+    <div class="pagination">
+        {{ macro.follow_pagination_widget(pagination=pagination, endpoint=endpoint, username=user.username) }}
+    </div>
+{% endblock %}

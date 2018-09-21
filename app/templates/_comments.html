@@ -1,0 +1,36 @@
+{# 渲染评论文本信息#}
+<div class="comment-body">
+    <ul class="comment_list">
+        {% for comment in comments %}
+            <li>
+                <a href="{{ url_for('main.user', username=comment.author.username) }}" class="col-md-4">{{ comment.author.username }}</a>
+                <span class="col-md-8">{{ comment.timestamp }}</span>
+                {% if comment.disable %}
+                    <p><i>由于评论涉嫌违规,此条评论不能显示!</i></p>
+                    {% if current_user.can(permissions=Permission.MODERATE_COMMENTS) %}
+                        {% if comment.body_html %}
+                            <p>{{ comment.body_html | safe }}</p>
+                        {% else %}
+                            <p>{{ comment.body }}</p>
+                        {% endif %}
+                    {% endif %}
+                {% elif not comment.disable %}
+                    {% if comment.body_html %}
+                        {{ comment.body_html }}
+                    {% else %}
+                        {{ comment.body }}
+                    {% endif %}
+                {% endif %}
+                {% if current_user.can(permissions=Permission.MODERATE_COMMENTS) %}
+                    <br><br>
+                    {% if comment.disable %}
+                        <a href="{{ url_for('main.moderate_enable', id=comment.id, page=page) }}" class="btn btn-sm btn-success">允许显示</a>
+                    {% else %}
+                        <a href="{{ url_for('main.moderate_disable', id=comment.id, page=page) }}" class="btn btn-danger btn-sm">禁止显示</a>
+                    {% endif %}
+                {% endif %}
+            </li>
+            <hr>
+        {% endfor %}
+    </ul>
+</div>

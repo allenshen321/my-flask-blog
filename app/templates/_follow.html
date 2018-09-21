@@ -1,0 +1,12 @@
+<ul>
+{% for follow in follows %}
+    <li>
+        <h4>
+            <a class="col-md-2" href="{{ url_for('main.user', username=follow['user'].username) }}">{{ follow['user'].username }}</a>
+            <span class="col-md-10">{{ follow['timestamp'] }}</span>
+        </h4>
+    </li>
+    <hr>
+
+{% endfor %}
+</ul>

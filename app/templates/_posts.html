@@ -1,0 +1,27 @@
+<div class="list-blogs">
+    <ol class="bloglist">
+    {% for post in posts %}
+        <li>
+            <h4>
+                <a href="{{ url_for('main.post', id=post.id) }}">{{ post.title }}</a>
+                {#            如果当前用户是文章作者,则显示编辑文章#}
+                {% if current_user == post.author %}
+                <a href="{{ url_for('main.edit_post', id=post.id) }}">
+                    <span class="btn-sm btn-success">编辑文章</span>
+                </a>
+                {% elif current_user.is_administrator() %}
+                    <a href="{{ url_for('main.edit_post', id=post.id) }}">
+                        <span class="btn-sm btn-success">编辑文章</span>
+                    </a>
+                {% endif %}
+            </h4>
+            <a href="{{ url_for('main.user', username=post.author.username) }}">作者:{{ post.author.username }}</a>
+            <span><a href="{{ url_for('main.post', id=post.id) }}#comments">评论数:{{ post.comments.count() }}</a></span>
+            <span>发表时间: {{ moment(post.timestamp).fromNow(refresh=True) }}</span>
+
+
+        </li>
+        <hr>
+    {% endfor %}
+    </ol>
+</div>

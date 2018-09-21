@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{#导入分页导航宏#}
+{% import '_macros.html' as macro %}
+
+
+{% block title %} Flasky-用户资料 {% endblock %}
+
+{% block page_content %}
+<div class="page-header">
+        <h1>{{ user.username }}({{ user.name }})的个人资料</h1>
+    <p>
+    {% if current_user.is_administrator() %}
+        <a href="{{ url_for('main.edit_profile_admin', id=user.id) }}" class="btn btn-danger">修改资料</a>
+    {% endif %}
+    {% if not current_user.is_administrator() and user.username == current_user.username %}
+        <a class="btn btn-danger" href="{{ url_for('main.edit_profile') }}">修改资料</a>
+    {% endif %}
+{#关注功能#}
+    {% if current_user.is_authenticated %}
+    {% if current_user.username != user.username %}
+        {% if current_user.is_following(user) %}
+            <a href="{{ url_for('main.unfollow', username=user.username) }}" class="btn btn-primary">取关</a>
+        {% else %}
+            <a href="{{ url_for('main.follow', username=user.username) }}" class="btn btn-primary">关注</a>
+        {% endif %}
+    {% endif %}
+    {% endif %}
+        <a href="{{ url_for('main.followed', username=user.username) }}" class="btn">关注:{{ user.followed.count() }}</a>
+        <a href="{{ url_for('main.followers', username=user.username) }}" class="btn">被关注:{{ user.followers.count() }}</a>
+        <a href="#" class="btn">发表文章:{{ user.posts.count() }}</a>
+    </p>
+</div>
+<div class="page-body">
+    {% if user.name or user.location %}
+    <p>
+        {% if user.name %}{{ user.name }}{% else %} {{ user.username }}{% endif %}
+        {% if user.location %}
+        来自
+        <a href="https://maps.baidu.com/?q={{ user.location }}">{{ user.location }}</a>
+        {% endif %}
+    </p>
+    {% endif %}
+    {% if current_user.is_administrator() %}
+    <p><a href="mailto:{{ user.email }}">{{ user.email }}</a></p>
+    {% endif %}
+    {% if user.about_me %} about me: {{ user.about_me }} {% endif %}
+    <p>
+        注册时间: {{ user.registration_time }}
+        上次登录: {{ user.last_seen }}
+    </p>
+
+{#    创建标签导航页#}
+    <ul id="myTab" class="nav nav-tabs" style="background: aliceblue">
+        <li class="active">
+            <a href="#posts" data-toggle="tab">文章</a>
+        </li>
+        <li>
+{#            <a href="#followed" data-toggle="tab">关注</a>#}
+            <a href="{{ url_for('main.followed', username=user.username) }}">关注</a>
+        </li>
+        <li>
+            <a href="{{ url_for('main.followers', username=user.username) }}">被关注</a>
+        </li>
+    </ul>
+{#导航页标签内容#}
+    <div id="myTabContent" class="tab-content">
+        <div class="tab-pane active" id="posts">
+            {% include '_posts.html' %}
+            <div class="pagination">
+                {{ macro.pagination_widget(pagination, 'main.user', username=current_user.username) }}
+            </div>
+        </div>
+        <div class="tab-pane" id="followed">
+            关注者内容
+        </div>
+        <div class="tab-pane" id="followers">
+            <p>被关注人的列表</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
