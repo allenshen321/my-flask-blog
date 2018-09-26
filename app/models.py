@@ -1,4 +1,4 @@
-from flask import current_app
+from flask import current_app, jsonify, url_for
 from . import db, login_manager, pagedown
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask.ext.login import UserMixin, AnonymousUserMixin
@@ -11,6 +11,10 @@ import bleach
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+
+# 利用sqlalchemy的event监听POST的body字段,如果设置新值则触发函数
+db.event.listen(Post.body, 'set', Post.change_body_to_html)
 
 
 class Follows(db.Model):
@@ -86,7 +90,7 @@ class User(UserMixin, db.Model):
         return self.can(Permission.ADMINISTER)
 
     def generate_confirmation_token(self, expiration=3600):
-        """生成确认token"""
+        """生成邮件确认token"""
         s = Serializer(current_app.config['SECRET_KEY'], expires_in=expiration)
         return s.dumps({'confirm': self.id})
 
@@ -155,6 +159,25 @@ class User(UserMixin, db.Model):
                 user.follow(user)
                 db.session.add(user)
                 db.session.commit()
+
+    def generate_auth_token(self, expiration):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        return s.dumps({'id': self.id})
+
+    @staticmethod
+    def verify_auth_token(token):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            data = s.load(token)
+        except:
+            return None
+        return User.query.filter_by(id=data['id'])
+
+    def to_json(self):
+        """用户资源转化为json格式"""
+        jsonify({
+            'url': url_for('api.get_post', id=self.id, _external=True),
+        })
 
     def __repr__(self):
         return '<User %s>' % self.username
@@ -235,9 +258,17 @@ class Post(db.Model):
                      'h1', 'h2', 'h3', 'p']
         target.body_html = bleach.linkify(bleach.clean(markdown(value, output_format='html'), tags=allow_tag, strip=True))
 
-
-# 利用sqlalchemy的event监听POST的body字段,如果设置新值则触发函数
-db.event.listen(Post.body, 'set', Post.change_body_to_html)
+    def to_json(self):
+        json_post = jsonify({
+            'url': url_for('api.get_post', id=self.id, _external=True),
+            'title': self.title,
+            'body': self.body,
+            'timestamp': self.timestamp,
+            'author': url_for('api.get_user', id=self.author_id, _external=True),
+            'comments': url_for('api.get_comments', id=self.id, _external=True),
+            'comment_count': self.comments.count()
+        })
+        return json_post
 
 
 class Comment(db.Model):

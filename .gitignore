@@ -1,0 +1,7 @@
+# 忽略文件, 不纳入git版本控制
+
+# 忽略__pycache__文件
+__pycache__
+
+# 忽略.idea文件夹
+.idea
