@@ -1,0 +1,43 @@
+import os
+from app import create_app, db
+from app.models import User, Role
+from flask.ext.script import Manager, Shell
+from flask.ext.migrate import Migrate, MigrateCommand
+import coverage
+
+COV = coverage.coverage(branch=True, include='app/*')
+COV.start()
+
+# 需要测试的代码
+app = create_app(os.getenv('FLASK_CONFIG') or 'default')
+manager = Manager(app)
+migrate = Migrate(app, db)
+
+
+def make_shell_context():
+    return dict(app=app, db=db, User=User, Role=Role)
+
+
+manager.add_command('shell', Shell(make_context=make_shell_context))
+manager.add_command('db', MigrateCommand)
+
+
+# 测试结果
+@manager.command
+def test():
+    import unittest
+    test_suite = unittest.TestLoader().discover('tests')
+    unittest.TextTestRunner(verbosity=2).run(test_suite)
+
+    COV.stop()
+    COV.save()
+    print('Coverage Summary:')
+    COV.report()
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    covdir = os.path.join(basedir, 'tmp/coverage')
+    COV.html_report(directory=covdir)
+    COV.erase()
+
+
+if __name__ == '__main__':
+    manager.run()

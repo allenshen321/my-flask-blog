@@ -1,5 +1,5 @@
 from flask.ext.wtf import FlaskForm
-from wtforms import StringField, SubmitField, TextAreaField, BooleanField, SelectField, IntegerField
+from wtforms import StringField, SubmitField, TextAreaField, BooleanField, SelectField
 from wtforms.validators import DataRequired, Length, Email, Regexp, ValidationError
 from ..models import Role, User
 from flask.ext.pagedown.fields import PageDownField
@@ -14,7 +14,8 @@ class EditProfileForm(FlaskForm):
 
 class EditProfileAdminForm(EditProfileForm):
     email = StringField('注册邮箱', validators=[DataRequired(), Email(), Length(1, 64)])
-    username = StringField('用户名', validators=[DataRequired(), Length(1, 64), Regexp(r'^[A-Za-z][A-Za-z0-9_.]*$', 0, message='用户名必须以字母开头,必须是数字,字母,_和.')])
+    username = StringField('用户名', validators=[DataRequired(), Length(1, 64), Regexp(
+        r'^[A-Za-z][A-Za-z0-9_.]*$', 0, message='用户名必须以字母开头,必须是数字,字母,_和.')])
     confirmed = BooleanField('是否进行过邮件确认')
     role = SelectField('角色级别', coerce=int)
     name = StringField('真实姓名', validators=[Length(0, 64)])

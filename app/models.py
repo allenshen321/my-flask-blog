@@ -13,10 +13,6 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
-# 利用sqlalchemy的event监听POST的body字段,如果设置新值则触发函数
-db.event.listen(Post.body, 'set', Post.change_body_to_html)
-
-
 class Follows(db.Model):
     __tablename__ = 'follows'
 
@@ -269,6 +265,10 @@ class Post(db.Model):
             'comment_count': self.comments.count()
         })
         return json_post
+
+
+# 利用sqlalchemy的event监听POST的body字段,如果设置新值则触发函数
+db.event.listen(Post.body, 'set', Post.change_body_to_html)
 
 
 class Comment(db.Model):

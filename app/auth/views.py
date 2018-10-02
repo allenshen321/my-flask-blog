@@ -5,6 +5,7 @@ from . import auth
 from ..models import User
 from .. import db
 from ..email import send_email
+from ..main.errors import internal_server_error
 
 
 @auth.before_request
@@ -52,7 +53,10 @@ def register():
         db.session.add(user)
         db.session.commit()
         token = user.generate_confirmation_token()
-        send_email(user.email, '确认邮件', 'auth/confirm', token=token, user=user)
+        try:
+            send_email(user.email, '确认邮件', 'auth/confirm', token=token, user=user)
+        except Exception as e:
+            internal_server_error(e)
         flash('确认邮件已经发送到您的邮箱,请及时确认!')
         return redirect(url_for('auth.login'))
     return render_template('auth/register.html', form=form)
