@@ -157,17 +157,17 @@ class User(UserMixin, db.Model):
                 db.session.commit()
 
     def generate_auth_token(self, expiration):
-        s = Serializer(current_app.config['SECRET_KEY'])
+        s = Serializer(current_app.config['SECRET_KEY'], expires_in=expiration)
         return s.dumps({'id': self.id})
 
     @staticmethod
     def verify_auth_token(token):
         s = Serializer(current_app.config['SECRET_KEY'])
         try:
-            data = s.load(token)
+            data = s.loads(token)
         except:
             return None
-        return User.query.filter_by(id=data['id'])
+        return User.query.filter_by(id=data['id']).first()
 
     def to_json(self):
         """用户资源转化为json格式"""
